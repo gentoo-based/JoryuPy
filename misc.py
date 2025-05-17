@@ -23,10 +23,12 @@ class Misc(commands.Cog):
         uptime = strftime("%Hh:%Mm:%Ss", gmtime(round(time.time() - self.uptime)))
         await ctx.send(f"Pong!\nShard ID: {ctx.guild.shard_id}\nLatency: {round(self.bot.get_shard(ctx.guild.shard_id).latency)}ms\nUptime: {uptime}")
     
-    @commands.hybrid_command(description="Display a meme through the bot, there are 24 total memes to display.")
-    @app_commands.describe(meme="The meme to relay through the bot")
+    @commands.hybrid_command()
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+    @app_commands.allowed_installs(guilds=True, users=True)
+    @app_commands.describe(meme="Meme to relay")
     async def meme(self, ctx: commands.Context, meme: str):
-
+        """Display a meme through the bot, there are 24 total memes to display."""
         async with aiohttp.ClientSession() as session:
             # Fetch the list of files in the GitHub folder
             async with session.get(GITHUB_API_URL) as resp:

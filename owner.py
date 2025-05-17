@@ -11,9 +11,7 @@ class Owner(commands.Cog):
     @commands.is_owner()
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=False)
     @app_commands.allowed_installs(guilds=True, users=False)
-    @app_commands.describe(message='Message to say',
-                           messageid='Message ID to reply to',
-                           attachment='Attachment to send')
+    @app_commands.describe(message='Message to say', messageid='Message ID to reply to', attachment='Attachment to send')
     async def echo(self, ctx: commands.Context, message: Optional[str], messageid: Optional[str], attachment: Optional[Attachment]):
         if ctx.interaction is None:
             await ctx.message.delete()
