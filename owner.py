@@ -14,7 +14,7 @@ class Owner(commands.Cog):
     @app_commands.describe(message='Message to say',
                            messageid='Message ID to reply to',
                            attachment='Attachment to send')
-    async def echo(self, ctx: commands.Context, message: Optional[str], messageid: Optional[int], attachment: Optional[Attachment]):
+    async def echo(self, ctx: commands.Context, message: Optional[str], messageid: Optional[str], attachment: Optional[Attachment]):
         if ctx.interaction is None:
             await ctx.message.delete()
         else:

@@ -7,6 +7,10 @@ from discord import app_commands
 import typing
 from typing import Optional
 import random
+import aiohttp
+import io
+
+GITHUB_API_URL = "https://api.github.com/repos/gentoo-based/memes/contents/memes"
 
 class Misc(commands.Cog):
     def __init__(self, bot: commands.Bot | commands.AutoShardedBot, uptime: int) -> None:
@@ -22,16 +26,57 @@ class Misc(commands.Cog):
     @commands.hybrid_command(description="Display a meme through the bot, there are 24 total memes to display.")
     @app_commands.describe(meme="The meme to relay through the bot")
     async def meme(self, ctx: commands.Context, meme: typing.Literal["real_kiryu_kazuma_yakuza", "aworldiwithnoanswers", "Bait", "bakamitai", "beverageiron", "beverageprowler", "brb", "breakerstyle", "breakingzalaw", "bwird", "chinaairlines", "chinese", "fredbeardance", "friday", "gun", "hacer_man", "haruka", "insanity", "wearetheyakuza4", "kill_ltg", "tys", "kiryuintro", "prowler", "stfu", "myhonestreaction"]):
-        listmemes = os.listdir("./memes")
-        for file in listmemes:
-            if (file.endswith(".mp4") or file.endswith(".mov") or file.endswith(".gif") or file.endswith("mp5")) and meme in file.title():
-                difile = discord.File(file)
-                await ctx.channel.send(difile)
-        if ctx.interaction is not None:
-            await ctx.defer(ephemeral=True)
-            await ctx.send("Sent your file.")
-        else:
-            await ctx.send("Sent your file.", delete_after=5)
+
+        async with aiohttp.ClientSession() as session:
+            # Fetch the list of files in the GitHub folder
+            async with session.get(GITHUB_API_URL) as resp:
+                if resp.status != 200:
+                    await ctx.send("Could not fetch memes from GitHub repository.")
+                    return
+                files = await resp.json()
+
+            # Filter image/video files only
+            valid_extensions = (".png", ".jpg", ".jpeg", ".gif", ".mp4", ".mov", ".mp5")
+            media_files = [file for file in files if file['name'].lower().endswith(valid_extensions)]
+
+            if not media_files:
+                await ctx.send("No meme files found in the GitHub repository folder.")
+                return
+
+            # If user specified a meme name, try to find it in the files
+            chosen_file = None
+            if meme:
+                # Case-insensitive match: check if meme string is in file name (without extension)
+                for file in media_files:
+                    # Remove extension and lower case for matching
+                    name_without_ext = file['name'].rsplit('.', 1)[0].lower()
+                    if meme.lower() == name_without_ext:
+                        chosen_file = file
+                        break
+                if not chosen_file:
+                    await ctx.send(f"Meme '{meme}' not found in the repository.")
+                    return
+            else:
+                # Pick a random meme if none specified
+                chosen_file = random.choice(media_files)
+
+            # Download the chosen file
+            async with session.get(chosen_file['download_url']) as file_resp:
+                if file_resp.status != 200:
+                    await ctx.send("Failed to download the meme image/video.")
+                    return
+                file_data = await file_resp.read()
+
+            # Send the file to Discord
+            discord_file = discord.File(io.BytesIO(file_data), filename=chosen_file['name'])
+            await ctx.send(file=discord_file)
+
+            # Optionally defer and confirm interaction response if slash command
+            if ctx.interaction is not None:
+                await ctx.defer(ephemeral=True)
+                await ctx.send("Sent your file.")
+            else:
+                await ctx.send("Sent your file.", delete_after=5)
     
     @commands.hybrid_command(description="Research about the specified user (if a user isn't specified it'll be specified to be you.)")
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
