@@ -25,7 +25,7 @@ class Misc(commands.Cog):
     
     @commands.hybrid_command(description="Display a meme through the bot, there are 24 total memes to display.")
     @app_commands.describe(meme="The meme to relay through the bot")
-    async def meme(self, ctx: commands.Context, meme: typing.Literal["real_kiryu_kazuma_yakuza", "aworldiwithnoanswers", "Bait", "bakamitai", "beverageiron", "beverageprowler", "brb", "breakerstyle", "breakingzalaw", "bwird", "chinaairlines", "chinese", "fredbeardance", "friday", "gun", "hacer_man", "haruka", "insanity", "wearetheyakuza4", "kill_ltg", "tys", "kiryuintro", "prowler", "stfu", "myhonestreaction"]):
+    async def meme(self, ctx: commands.Context, meme: str):
 
         async with aiohttp.ClientSession() as session:
             # Fetch the list of files in the GitHub folder
@@ -73,8 +73,7 @@ class Misc(commands.Cog):
 
             # Optionally defer and confirm interaction response if slash command
             if ctx.interaction is not None:
-                await ctx.defer(ephemeral=True)
-                await ctx.send("Sent your file.")
+                await ctx.send("Sent your file.", ephemeral=True)
             else:
                 await ctx.send("Sent your file.", delete_after=5)
     
