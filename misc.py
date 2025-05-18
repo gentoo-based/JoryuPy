@@ -24,11 +24,10 @@ class Misc(commands.Cog):
         await ctx.send(f"Pong!\nShard ID: {ctx.guild.shard_id}\nLatency: {round(self.bot.get_shard(ctx.guild.shard_id).latency)}ms\nUptime: {uptime}")
     
     @commands.hybrid_command()
-    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
-    @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.describe(meme="Meme to relay")
     async def meme(self, ctx: commands.Context, meme: str):
         """Display a meme through the bot, there are 24 total memes to display."""
+        await ctx.defer(ephemeral=True)
         async with aiohttp.ClientSession() as session:
             # Fetch the list of files in the GitHub folder
             async with session.get(GITHUB_API_URL) as resp:
@@ -70,14 +69,14 @@ class Misc(commands.Cog):
                 file_data = await file_resp.read()
 
             # Send the file to Discord
-            discord_file = discord.File(io.BytesIO(file_data), filename=chosen_file['name'])
-            await ctx.send(file=discord_file)
-
             # Optionally defer and confirm interaction response if slash command
             if ctx.interaction is not None:
-                await ctx.send("Sent your file.", ephemeral=True)
+                await ctx.send("Initialized your file.", ephemeral=True)
             else:
-                await ctx.send("Sent your file.", delete_after=5)
+                await ctx.send("Initialized your file.", delete_after=5)
+            discord_file = discord.File(io.BytesIO(file_data), filename=chosen_file['name'])
+            await ctx.channel.send(file=discord_file)
+
     
     @commands.hybrid_command(description="Research about the specified user (if a user isn't specified it'll be specified to be you.)")
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
