@@ -1,5 +1,6 @@
 import os
-from .mintegration.main import init
+from mintegration.main import init
+init()
 import asyncio
 import random
 from time import time
@@ -8,7 +9,6 @@ from discord.ext import commands
 from dotenv import dotenv_values
 from database import execute_query
 
-init()
 
 DISCORD_TOKEN = dotenv_values(".env")["DISCORD_TOKEN"] or os.getenv("DISCORD_TOKEN")
 
