@@ -23,8 +23,6 @@ async def get_prefix(bot: commands.Bot | commands.AutoShardedBot, message: Messa
 
 class JoryuPy(commands.AutoShardedBot):
     def __init__(self):
-        self.intents = Intents.all()
-        self.command_prefix = get_prefix
         self.remove_command("help")
         self.uptime = time()
         self.run(DISCORD_TOKEN)
@@ -69,4 +67,4 @@ class JoryuPy(commands.AutoShardedBot):
             await self.change_presence(activity=randomizedActivity, status=Status.online, shard_id=shard_id)
             await asyncio.sleep(50)
 
-commands.AutoShardedBot()
+commands.AutoShardedBot(intents=Intents.all(), command_prefix=get_prefix)
