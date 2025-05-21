@@ -22,14 +22,9 @@ async def get_prefix(bot: commands.Bot | commands.AutoShardedBot, message: Messa
         return "td!"
 
 class JoryuPy(commands.AutoShardedBot):
-    def __init__(self):
-        self.intents = Intents.all()
-        self.command_prefix = get_prefix
+    async def on_ready(self):
         self.remove_command("help")
         self.uptime = time()
-        self.run(DISCORD_TOKEN)
-
-    async def on_ready(self):
         await execute_query("CREATE TABLE IF NOT EXISTS prefixes ( guild_id INTEGER PRIMARY KEY, prefix VARCHAR(10) NOT NULL DEFAULT 'td!' )", None)
         await execute_query("CREATE TABLE IF NOT EXISTS warnings (id INTEGER PRIMARY KEY AUTOINCREMENT, guild_id INTEGER, user_id INTEGER, warns INTEGER, reason TEXT, moderator_id INTEGER)", None)
         await self.load_extension("misc")
@@ -69,4 +64,5 @@ class JoryuPy(commands.AutoShardedBot):
             await self.change_presence(activity=randomizedActivity, status=Status.online, shard_id=shard_id)
             await asyncio.sleep(50)
 
-JoryuPy()
+joryu = JoryuPy(intents=Intents.all(), command_prefix=get_prefix)
+joryu.run(DISCORD_TOKEN)
