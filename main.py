@@ -6,11 +6,11 @@ import random
 from time import time
 from discord import Intents, activity, Status, Message, Guild
 from discord.ext import commands
-from dotenv import dotenv_values
+from dotenv import load_dotenv
 from database import execute_query
+load_dotenv()
 
-
-DISCORD_TOKEN = dotenv_values(".env")["DISCORD_TOKEN"] or os.getenv("DISCORD_TOKEN")
+DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 
 async def get_prefix(bot: commands.Bot | commands.AutoShardedBot, message: Message):
     if message.guild:
