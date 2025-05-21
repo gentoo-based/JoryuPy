@@ -1,7 +1,6 @@
-from ..main import JoryuPy
 from discord.gateway import DiscordWebSocket
 
-async def identify(self: JoryuPy):
+async def identify(self):
     payload = {
         "op": self.IDENTIFY,
         "d": {
