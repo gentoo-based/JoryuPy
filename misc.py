@@ -7,10 +7,9 @@ from typing import Optional
 import random
 import aiohttp
 import io
-from main import JoryuPy
 
 class Misc(commands.Cog):
-    def __init__(self, bot: JoryuPy) -> None:
+    def __init__(self, bot) -> None:
         self.bot = bot
 
     @commands.hybrid_command()
@@ -306,5 +305,5 @@ class Misc(commands.Cog):
             await ctx.send(f"{stuff}")
     
 
-async def setup(bot: JoryuPy):
+async def setup(bot):
     await bot.add_cog(Misc(bot))
