@@ -6,6 +6,7 @@ import random
 from time import time
 from discord import Intents, activity, Status, Message, Guild
 from discord.ext import commands
+from discord.ext.commands.bot import BotBase
 from dotenv import load_dotenv
 from database import execute_query
 load_dotenv()
@@ -22,18 +23,31 @@ async def get_prefix(bot: commands.Bot | commands.AutoShardedBot, message: Messa
         return "td!"
 
 class JoryuPy(commands.AutoShardedBot):
-    async def on_ready(self):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.remove_command("help")
         self.uptime = time()
+        self.GITHUB_API_URL = "https://api.github.com/repos/gentoo-based/memes/contents/memes"
+    
+    async def on_ready(self):
+        """On ready event handler"""
+
+        # Create the tables in the database that is needed.
         await execute_query("CREATE TABLE IF NOT EXISTS prefixes ( guild_id INTEGER PRIMARY KEY, prefix VARCHAR(10) NOT NULL DEFAULT 'td!' )", None)
         await execute_query("CREATE TABLE IF NOT EXISTS warnings (id INTEGER PRIMARY KEY AUTOINCREMENT, guild_id INTEGER, user_id INTEGER, warns INTEGER, reason TEXT, moderator_id INTEGER)", None)
+
+        # Load the extensions and sync the command tree to keep it up to date.
         await self.load_extension("misc")
         await self.load_extension("moderation")
         await self.load_extension("owner")
         await self.tree.sync()
+
         print(f"{self.user.name}#{self.user.discriminator} has successfully entered the Discord API Gateway with {self.shard_count} Shards.")
     
     async def on_guild_join(self, guild: Guild):
+        """On guild join event handler"""
+
+        # Insert the default prefix onto prefixes table in the database
         execute_query("INSERT INTO prefixes (guild_id, prefix) VALUES (?, ?)", (guild.id, "td!"))
 
     async def on_shard_ready(self, shard_id):

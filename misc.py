@@ -7,14 +7,11 @@ from typing import Optional
 import random
 import aiohttp
 import io
-from .main import JoryuPy
-
-GITHUB_API_URL = "https://api.github.com/repos/gentoo-based/memes/contents/memes"
+from main import JoryuPy
 
 class Misc(commands.Cog):
-    def __init__(self, bot: JoryuPy, uptime: int) -> None:
+    def __init__(self, bot: JoryuPy) -> None:
         self.bot = bot
-        self.uptime = bot.uptime
 
     @commands.hybrid_command()
     async def help(self, ctx: commands.Context):    
@@ -33,7 +30,7 @@ class Misc(commands.Cog):
             await ctx.channel.typing()
         else:
             await ctx.defer()
-        uptime = strftime("%Hh:%Mm:%Ss", gmtime(round(time.time() - self.uptime)))
+        uptime = strftime("%Hh:%Mm:%Ss", gmtime(round(time.time() - self.bot.uptime)))
         await ctx.send(f"Pong!\nShard ID: {ctx.guild.shard_id}\nLatency: {round(self.bot.get_shard(ctx.guild.shard_id).latency)}ms\nUptime: {uptime}")
 
     @commands.hybrid_command()
@@ -46,7 +43,7 @@ class Misc(commands.Cog):
             await ctx.defer(ephemeral=True)
         async with aiohttp.ClientSession() as session:
             # Fetch the list of files in the GitHub folder
-            async with session.get(GITHUB_API_URL) as resp:
+            async with session.get(self.bot.GITHUB_API_URL) as resp:
                 if resp.status != 200:
                     await ctx.send("Could not fetch memes from GitHub repository.")
                     return

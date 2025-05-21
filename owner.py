@@ -1,9 +1,10 @@
 from discord.ext import commands
 from discord import app_commands, File, Attachment
 from typing import Optional, Literal
+from main import JoryuPy
 
 class Owner(commands.Cog):
-    def __init__(self, bot: commands.Bot | commands.AutoShardedBot) -> None:
+    def __init__(self, bot: JoryuPy) -> None:
         self.bot = bot
 
     @commands.hybrid_command(description="Talk through the bot (owner only)")

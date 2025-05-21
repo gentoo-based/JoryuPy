@@ -2,10 +2,11 @@ from discord.ext import commands
 from discord import app_commands, Member, Permissions
 from typing import Optional
 from database import execute_query
+from main import JoryuPy
 
 @app_commands.guild_only()
 class Moderation(commands.Cog):
-    def __init__(self, bot: commands.Bot | commands.AutoShardedBot) -> None:
+    def __init__(self, bot: JoryuPy) -> None:
         self.bot = bot
 
     @commands.hybrid_command(description="Ban a user")
