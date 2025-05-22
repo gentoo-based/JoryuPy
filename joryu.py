@@ -41,7 +41,7 @@ class JoryuPy(commands.AutoShardedBot):
 
         async def srunner():
             async with self:
-                await self.start(self.DISCORD_TOKEN, True)
+                await self.start(token=self.DISCORD_TOKEN, reconnect=True)
 
         if log_handler is not None:
             setup_logging(
