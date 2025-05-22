@@ -5,17 +5,18 @@ import mintegration
 import asyncio
 import random
 from time import time
-from discord import Intents, activity, Status, Message, Guild
+from discord import Intents, activity, Status, Message, Guild, utils
 from discord.ext import commands
-from discord.ext.commands.bot import BotBase
 from dotenv import load_dotenv
 from database import execute_query
+from typing import Optional
+from logging import Handler, Formatter
 load_dotenv()
 
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 
 
-async def get_prefix(bot: commands.Bot | commands.AutoShardedBot, message: Message):
+async def get_prefix(bot, message: Message):
     if message.guild:
         prefix = await execute_query("SELECT prefix FROM prefixes WHERE guild_id = ?", (message.guild.id,))
         if prefix is None:
@@ -31,6 +32,39 @@ class JoryuPy(commands.AutoShardedBot):
         self.uptime = time()
         self.GITHUB_API_URL = "https://api.github.com/repos/gentoo-based/memes/contents/memes"
 
+    def run(
+        self,
+        token: str,
+        *,
+        reconnect: bool = True,
+        log_handler: Optional[Handler] = utils.MISSING,
+        log_formatter: Formatter = utils.MISSING,
+        log_level: int = utils.MISSING,
+        root_logger: bool = False,
+    ) -> None:
+        async def runner():
+            async with self:
+                await self.start(token, reconnect=reconnect)
+                await self.load_extension("misc")
+                await self.load_extension("moderation")
+                await self.load_extension("owner")
+
+        if log_handler is not None:
+            utils.setup_logging(
+                handler=log_handler,
+                formatter=log_formatter,
+                level=log_level,
+                root=root_logger,
+            )
+
+        try:
+            asyncio.run(runner())
+        except KeyboardInterrupt:
+            # nothing to do here
+            # `asyncio.run` handles the loop cleanup
+            # and `self.start` closes all sockets and the HTTPClient instance.
+            return
+    
     async def on_ready(self):
         """On ready event handler"""
 
@@ -39,17 +73,8 @@ class JoryuPy(commands.AutoShardedBot):
         await execute_query("CREATE TABLE IF NOT EXISTS warnings (id INTEGER PRIMARY KEY AUTOINCREMENT, guild_id INTEGER, user_id INTEGER, warns INTEGER, reason TEXT, moderator_id INTEGER)", None)
 
         # Load the extensions and sync the command tree to keep it up to date.
-        await self.load_extension("misc")
-        await self.load_extension("moderation")
-        await self.load_extension("owner")
         await self.tree.sync()
         print(f"{self.user.name}#{self.user.discriminator} has successfully entered the Discord API Gateway with {self.shard_count} Shards.")
-
-    async def on_guild_join(self, guild: Guild):
-        """On guild join event handler"""
-
-        # Insert the default prefix onto prefixes table in the database
-        execute_query("INSERT INTO prefixes (guild_id, prefix) VALUES (?, ?)", (guild.id, "td!"))
 
     async def on_shard_ready(self, shard_id):
         while True:
@@ -78,5 +103,11 @@ class JoryuPy(commands.AutoShardedBot):
             randomizedActivity = activity.CustomActivity(name=random.choice(kiryu_quotes))
             await self.change_presence(activity=randomizedActivity, status=Status.online, shard_id=shard_id)
             await asyncio.sleep(50)
+
+    async def on_guild_join(self, guild: Guild):
+        """On guild join event handler"""
+
+        # Insert the default prefix onto prefixes table in the database
+        await execute_query("INSERT INTO prefixes (guild_id, prefix) VALUES (?, ?)", (guild.id, "td!"))
 
 JoryuPy().run(DISCORD_TOKEN)

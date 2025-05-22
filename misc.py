@@ -4,12 +4,13 @@ from time import gmtime,strftime
 from discord.ext import commands
 from discord import app_commands
 from typing import Optional
+from main import JoryuPy
 import random
 import aiohttp
 import io
 
 class Misc(commands.Cog):
-    def __init__(self, bot) -> None:
+    def __init__(self, bot: JoryuPy) -> None:
         self.bot = bot
 
     @commands.hybrid_command()
@@ -305,5 +306,5 @@ class Misc(commands.Cog):
             await ctx.send(f"{stuff}")
     
 
-async def setup(bot):
+async def setup(bot: JoryuPy):
     await bot.add_cog(Misc(bot))
