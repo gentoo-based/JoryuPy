@@ -25,12 +25,12 @@ async def get_prefix(bot: commands.Bot | commands.AutoShardedBot, message: Messa
         return "td!"
 
 class JoryuPy(commands.AutoShardedBot):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self):
+        super().__init__(intents=Intents.all(), command_prefix=get_prefix)
         self.remove_command("help")
         self.uptime = time()
         self.GITHUB_API_URL = "https://api.github.com/repos/gentoo-based/memes/contents/memes"
-    
+
     async def on_ready(self):
         """On ready event handler"""
 
@@ -79,5 +79,4 @@ class JoryuPy(commands.AutoShardedBot):
             await self.change_presence(activity=randomizedActivity, status=Status.online, shard_id=shard_id)
             await asyncio.sleep(50)
 
-joryu = JoryuPy(intents=Intents.all(), command_prefix=get_prefix)
-joryu.run(DISCORD_TOKEN)
+JoryuPy().run(DISCORD_TOKEN)
