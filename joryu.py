@@ -24,7 +24,7 @@ async def get_prefix(bot, message: Message):
 
 class JoryuPy(commands.AutoShardedBot):
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__(help_command=None, *args, **kwargs)
         self.uptime = time()
         self.GITHUB_API_URL = "https://api.github.com/repos/gentoo-based/memes/contents/memes"
     
