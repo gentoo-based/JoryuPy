@@ -3,6 +3,8 @@ from discord import app_commands, Member
 from typing import Optional
 from database import execute_query
 from joryu import JoryuPy
+from datetime import timedelta
+from time import time
 
 @app_commands.guild_only()
 class Moderation(commands.Cog):
@@ -27,6 +29,14 @@ class Moderation(commands.Cog):
         guild = ctx.guild
         await guild.unban(user=user, reason=reason)
         await ctx.send(f"Unbanned {user} for reason: {reason}")
+
+    @commands.hybrid_command(description="Time out a user")
+    @commands.has_permissions(manage_members=True)
+    @app_commands.describe(user="User to time out", reason="Reason why you wanted to time out a specified user")
+    async def timeout(self, ctx: commands.Context, user: Member, seconds: float, reason: Optional[str]):
+        guild = ctx.guild
+        await user.timeout(until=timedelta(time()) + timedelta(seconds=seconds), reason=reason)
+        await ctx.send(f"Kicked {user} for reason: {reason}")
 
     @commands.hybrid_command(description="kick a user")
     @commands.has_permissions(kick_members=True)
