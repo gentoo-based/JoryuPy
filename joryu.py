@@ -27,9 +27,9 @@ class JoryuPy(commands.AutoShardedBot):
         super().__init__(help_command=None, *args, **kwargs)
         self.uptime = time()
         self.GITHUB_API_URL = "https://api.github.com/repos/gentoo-based/memes/contents/memes"
-    
-    async def on_ready(self):
-        """On ready event handler"""
+
+    async def setup_hook(self):
+        """A once-only event handler"""
 
         # Create the tables in the database that is needed.
         await execute_query("CREATE TABLE IF NOT EXISTS prefixes ( guild_id INTEGER PRIMARY KEY, prefix VARCHAR(10) NOT NULL DEFAULT 'td!' )", None)
@@ -42,7 +42,6 @@ class JoryuPy(commands.AutoShardedBot):
 
         # Sync the command tree to keep all of the interaction commands up to date.
         await self.tree.sync()
-
         print(f"{self.user.name}#{self.user.discriminator} has successfully entered the Discord API Gateway with {self.shard_count} Shards.")
 
     async def on_shard_ready(self, shard_id):
