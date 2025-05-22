@@ -79,5 +79,5 @@ class JoryuPy(commands.AutoShardedBot):
         # Insert the default prefix onto prefixes table in the database
         await execute_query("INSERT INTO prefixes (guild_id, prefix) VALUES (?, ?)", (guild.id, "td!"))
 
-if __name__ is "__main__":
+if __name__ == "__main__":
     JoryuPy(intents=Intents.all(), command_prefix=get_prefix).run(TOKEN)
