@@ -1,6 +1,7 @@
+#!/bin/env python
+
 import os
-from mintegration.main import init
-init()
+import mintegration
 import asyncio
 import random
 from time import time
@@ -12,6 +13,7 @@ from database import execute_query
 load_dotenv()
 
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
+
 
 async def get_prefix(bot: commands.Bot | commands.AutoShardedBot, message: Message):
     if message.guild:
@@ -41,9 +43,8 @@ class JoryuPy(commands.AutoShardedBot):
         await self.load_extension("moderation")
         await self.load_extension("owner")
         await self.tree.sync()
-
         print(f"{self.user.name}#{self.user.discriminator} has successfully entered the Discord API Gateway with {self.shard_count} Shards.")
-    
+
     async def on_guild_join(self, guild: Guild):
         """On guild join event handler"""
 

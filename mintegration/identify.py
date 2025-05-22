@@ -1,5 +1,3 @@
-from discord.gateway import DiscordWebSocket
-
 async def identify(self):
     payload = {
         "op": self.IDENTIFY,
@@ -34,6 +32,3 @@ async def identify(self):
 
     await self.call_hooks("before_identify", self.shard_id, initial=self._initial_identify)
     await self.send_as_json(payload)
-
-def init():
-    DiscordWebSocket.identify = identify
