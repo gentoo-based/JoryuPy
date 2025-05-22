@@ -40,7 +40,7 @@ class JoryuPy(commands.AutoShardedBot):
         await self.load_extension("misc")
         await self.load_extension("moderation")
         await self.load_extension("owner")
-        
+
         # Load the extensions and sync the command tree to keep it up to date.
         await self.tree.sync()
         print(f"{self.user.name}#{self.user.discriminator} has successfully entered the Discord API Gateway with {self.shard_count} Shards.")
@@ -79,12 +79,4 @@ class JoryuPy(commands.AutoShardedBot):
         # Insert the default prefix onto prefixes table in the database
         await execute_query("INSERT INTO prefixes (guild_id, prefix) VALUES (?, ?)", (guild.id, "td!"))
 
-async def initialize():
-    async with JoryuPy() as joryu:
-        try:
-            await joryu.start(DISCORD_TOKEN)
-            await utils.setup_logging()
-        except KeyboardInterrupt:
-            return
-        
-asyncio.run(initialize())
+JoryuPy().run(DISCORD_TOKEN)
