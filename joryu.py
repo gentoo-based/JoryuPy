@@ -4,15 +4,13 @@ import os
 import mintegration
 import asyncio
 import random
+import logging
 from time import time
 from discord import Intents, activity, Status, Message, Guild, utils
 from discord.ext import commands
 from dotenv import load_dotenv
 from database import execute_query
 load_dotenv()
-
-DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
-
 
 async def get_prefix(bot, message: Message):
     if message.guild:
@@ -24,11 +22,13 @@ async def get_prefix(bot, message: Message):
         return "td!"
 
 class JoryuPy(commands.AutoShardedBot):
-    def __init__(self):
-        super().__init__(intents=Intents.all(), command_prefix=get_prefix)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.help_command = None
         self.uptime = time()
         self.GITHUB_API_URL = "https://api.github.com/repos/gentoo-based/memes/contents/memes"
+        self.DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
+
     
     async def on_ready(self):
         """On ready event handler"""
@@ -80,4 +80,13 @@ class JoryuPy(commands.AutoShardedBot):
         # Insert the default prefix onto prefixes table in the database
         await execute_query("INSERT INTO prefixes (guild_id, prefix) VALUES (?, ?)", (guild.id, "td!"))
 
-JoryuPy().run(DISCORD_TOKEN)
+async def initialize():
+    utils.setup_logging()
+    async with JoryuPy(intents=Intents.all(), command_prefix=get_prefix) as joryu:
+        await joryu.start(joryu.DISCORD_TOKEN)
+
+if __name__ == "__main__":
+    try:
+        asyncio.run(initialize())
+    except KeyboardInterrupt:
+        pass

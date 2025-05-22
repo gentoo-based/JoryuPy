@@ -2,10 +2,11 @@ from discord.ext import commands
 from discord import app_commands, Member
 from typing import Optional
 from database import execute_query
+from joryu import JoryuPy
 
 @app_commands.guild_only()
 class Moderation(commands.Cog):
-    def __init__(self, bot) -> None:
+    def __init__(self, bot: JoryuPy) -> None:
         self.bot = bot
 
     @commands.hybrid_command(description="Ban a user")
@@ -72,5 +73,5 @@ class Moderation(commands.Cog):
             return
         await ctx.send(f"The prefix has been set to `{prefix[0]}`")
 
-async def setup(bot: commands.Bot | commands.AutoShardedBot):
+async def setup(bot: JoryuPy):
     await bot.add_cog(Moderation(bot))
