@@ -72,7 +72,7 @@ class JoryuPy(commands.AutoShardedBot):
             ]
             randomizedActivity = activity.CustomActivity(name=random.choice(kiryu_quotes))
             await self.change_presence(activity=randomizedActivity, status=Status.online, shard_id=shard_id)
-            await asyncio.sleep(50)
+            await asyncio.sleep(random.randint(25,50))
 
     async def on_guild_join(self, guild: Guild):
         """On guild join event handler"""
