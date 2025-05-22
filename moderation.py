@@ -33,10 +33,16 @@ class Moderation(commands.Cog):
     @commands.hybrid_command(description="Time out a user")
     @commands.has_permissions(moderate_members=True)
     @app_commands.describe(user="User to time out", reason="Reason why you wanted to time out a specified user")
-    async def timeout(self, ctx: commands.Context, user: Member, seconds: float, reason: Optional[str]):
-        guild = ctx.guild
-        await user.timeout(until=timedelta(time()) + timedelta(seconds=seconds), reason=reason)
-        await ctx.send(f"Kicked {user} for reason: {reason}")
+    async def timeout(self, ctx: commands.Context, user: Member, time: str, reason: Optional[str]):
+        if "s" in time:
+            await user.timeout(until=timedelta(seconds=float(time.split("s")[0])), reason=reason)
+        elif "m" in time:
+            await user.timeout(until=timedelta(minutes=float(time.split("m")[0])), reason=reason)
+        elif "h" in time:
+            await user.timeout(until=timedelta(hours=float(time.split("h")[0])), reason=reason)
+        elif "d" in time:
+            await user.timeout(until=timedelta(days=float(time.split("d")[0])), reason=reason)
+        await ctx.send(f"Muted {user} until {time} for reason: {reason}")
 
     @commands.hybrid_command(description="kick a user")
     @commands.has_permissions(kick_members=True)
