@@ -7,6 +7,7 @@ from typing import Optional
 import random
 import aiohttp
 from joryu import JoryuPy
+from gpiozero import CPUTemperature
 import io
 
 class Misc(commands.Cog):
@@ -206,6 +207,18 @@ class Misc(commands.Cog):
             await ctx.message.reply(f"{result}")
         else:
             await ctx.send(f"{result}")
+
+    @commands.hybrid_command()
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+    @app_commands.allowed_installs(guilds=True, users=True)
+    async def roomtemp(self, ctx: commands.Context):
+        """Gets the room temperature from the CPU :troll:"""
+        if ctx.interaction is None:
+            await ctx.channel.typing()
+            await ctx.message.reply(f"Room temperature is {CPUTemperature().temperature}°C")
+        else:
+            await ctx.defer()
+            await ctx.send(f"Room temperature is {CPUTemperature().temperature}°C")
 
     @commands.hybrid_command()
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
