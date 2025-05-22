@@ -26,7 +26,7 @@ async def get_prefix(bot, message: Message):
 class JoryuPy(commands.AutoShardedBot):
     def __init__(self):
         super().__init__(intents=Intents.all(), command_prefix=get_prefix)
-        self.remove_command("help")
+        self.help_command = None
         self.uptime = time()
         self.GITHUB_API_URL = "https://api.github.com/repos/gentoo-based/memes/contents/memes"
     
@@ -37,12 +37,13 @@ class JoryuPy(commands.AutoShardedBot):
         await execute_query("CREATE TABLE IF NOT EXISTS prefixes ( guild_id INTEGER PRIMARY KEY, prefix VARCHAR(10) NOT NULL DEFAULT 'td!' )", None)
         await execute_query("CREATE TABLE IF NOT EXISTS warnings (id INTEGER PRIMARY KEY AUTOINCREMENT, guild_id INTEGER, user_id INTEGER, warns INTEGER, reason TEXT, moderator_id INTEGER)", None)
 
+        # Load the extensions and sync the command tree to keep it up to date.
         await self.load_extension("misc")
         await self.load_extension("moderation")
         await self.load_extension("owner")
 
-        # Load the extensions and sync the command tree to keep it up to date.
         await self.tree.sync()
+
         print(f"{self.user.name}#{self.user.discriminator} has successfully entered the Discord API Gateway with {self.shard_count} Shards.")
 
     async def on_shard_ready(self, shard_id):
