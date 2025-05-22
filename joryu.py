@@ -6,7 +6,9 @@ import asyncio
 import random
 import logging
 from time import time
-from discord import Intents, activity, Status, Message, Guild, utils
+from discord import Intents, activity, Status, Message, Guild
+from discord.utils import MISSING, setup_logging
+from typing import Optional, Any
 from discord.ext import commands
 from dotenv import load_dotenv
 from database import execute_query
@@ -22,13 +24,37 @@ async def get_prefix(bot, message: Message):
         return "td!"
 
 class JoryuPy(commands.AutoShardedBot):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.help_command = None
+    def __init__(self, command_prefix, *, intents, **options):
+        super().__init__(command_prefix, help_command=None, intents=intents, **options)
         self.uptime = time()
         self.GITHUB_API_URL = "https://api.github.com/repos/gentoo-based/memes/contents/memes"
         self.DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 
+    def run(
+        self,
+        *,
+        log_handler: Optional[logging.Handler] = MISSING,
+        log_formatter: logging.Formatter = MISSING,
+        log_level: int = MISSING,
+        root_logger: bool = False,
+    ) -> None:
+
+        async def srunner():
+            async with self:
+                await self.start(self.DISCORD_TOKEN, True)
+
+        if log_handler is not None:
+            setup_logging(
+                handler=log_handler,
+                formatter=log_formatter,
+                level=log_level,
+                root=root_logger,
+            )
+
+        try:
+            asyncio.run(srunner())
+        except KeyboardInterrupt:
+            return
     
     async def on_ready(self):
         """On ready event handler"""
@@ -37,11 +63,12 @@ class JoryuPy(commands.AutoShardedBot):
         await execute_query("CREATE TABLE IF NOT EXISTS prefixes ( guild_id INTEGER PRIMARY KEY, prefix VARCHAR(10) NOT NULL DEFAULT 'td!' )", None)
         await execute_query("CREATE TABLE IF NOT EXISTS warnings (id INTEGER PRIMARY KEY AUTOINCREMENT, guild_id INTEGER, user_id INTEGER, warns INTEGER, reason TEXT, moderator_id INTEGER)", None)
 
-        # Load the extensions and sync the command tree to keep it up to date.
+        # Load the extensions/cogs.
         await self.load_extension("misc")
         await self.load_extension("moderation")
         await self.load_extension("owner")
 
+        # Sync the command tree to keep all of the interaction commands up to date.
         await self.tree.sync()
 
         print(f"{self.user.name}#{self.user.discriminator} has successfully entered the Discord API Gateway with {self.shard_count} Shards.")
@@ -80,13 +107,5 @@ class JoryuPy(commands.AutoShardedBot):
         # Insert the default prefix onto prefixes table in the database
         await execute_query("INSERT INTO prefixes (guild_id, prefix) VALUES (?, ?)", (guild.id, "td!"))
 
-async def initialize():
-    utils.setup_logging()
-    async with JoryuPy(intents=Intents.all(), command_prefix=get_prefix) as joryu:
-        await joryu.start(joryu.DISCORD_TOKEN)
-
 if __name__ == "__main__":
-    try:
-        asyncio.run(initialize())
-    except KeyboardInterrupt:
-        pass
+    JoryuPy(intents=Intents.all(), command_prefix=get_prefix).run()
