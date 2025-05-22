@@ -2,7 +2,6 @@ from discord.ext import commands
 from discord import app_commands, Member
 from typing import Optional
 from database import execute_query
-from main import JoryuPy
 
 @app_commands.guild_only()
 class Moderation(commands.Cog):
@@ -73,5 +72,5 @@ class Moderation(commands.Cog):
             return
         await ctx.send(f"The prefix has been set to `{prefix[0]}`")
 
-async def setup(bot: JoryuPy):
+async def setup(bot: commands.Bot | commands.AutoShardedBot):
     await bot.add_cog(Moderation(bot))
