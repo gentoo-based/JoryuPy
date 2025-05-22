@@ -211,18 +211,6 @@ class Misc(commands.Cog):
     @commands.hybrid_command()
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     @app_commands.allowed_installs(guilds=True, users=True)
-    async def roomtemp(self, ctx: commands.Context):
-        """Gets the room temperature from the CPU :troll:"""
-        if ctx.interaction is None:
-            await ctx.channel.typing()
-            await ctx.message.reply(f"Room temperature is {CPUTemperature().temperature}°C")
-        else:
-            await ctx.defer()
-            await ctx.send(f"Room temperature is {CPUTemperature().temperature}°C")
-
-    @commands.hybrid_command()
-    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
-    @app_commands.allowed_installs(guilds=True, users=True)
     async def flip(self, ctx: commands.Context):
         """Flips a coin."""
         if ctx.interaction is None:
