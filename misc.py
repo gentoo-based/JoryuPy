@@ -7,7 +7,6 @@ from typing import Optional
 import random
 import aiohttp
 from joryu import JoryuPy
-from gpiozero import CPUTemperature
 import io
 
 class Misc(commands.Cog):
@@ -31,9 +30,19 @@ class Misc(commands.Cog):
             await ctx.channel.typing()
         else:
             await ctx.defer()
-        uptime = strftime("%Hh:%Mm:%Ss", gmtime(round(time.time() - self.bot.uptime)))
-        await ctx.send(f"Pong!\nShard ID: {ctx.guild.shard_id}\nLatency: {round(self.bot.get_shard(ctx.guild.shard_id).latency)}ms\nUptime: {uptime}")
+        latency_ms = round(self.bot.latency * 1000, 2)
+        await ctx.send(f"Pong! `{latency_ms}ms`")
 
+    @commands.hybrid_command()
+    async def uptime(self, ctx: commands.Context):
+        """Get the uptime of the bot."""
+        if ctx.interaction is None:
+            await ctx.channel.typing()
+        else:
+            await ctx.defer()
+        uptime = strftime("%Hh:%Mm:%Ss", gmtime(round(time.time() - self.bot.uptime)))    
+        await ctx.send(f"Uptime: `{uptime}`")
+    
     @commands.hybrid_command()
     @app_commands.describe(meme="Meme to relay")
     async def meme(self, ctx: commands.Context, meme: str):

@@ -1,9 +1,8 @@
-import os
 import mintegration
 import asyncio
 import random
 from time import time
-from discord import Intents, activity, Status, Message, Guild
+from discord import activity, Status, Message, Guild
 from discord.ext import commands
 from database import execute_query
 
