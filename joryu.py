@@ -42,7 +42,7 @@ class JoryuPy(commands.AutoShardedBot):
 
         async def runner():
             async with self:
-                self.start(token=token, reconnect=reconnect)
+                await self.start(token=token, reconnect=reconnect)
 
         if log_handler is None:
             setup_logging(
