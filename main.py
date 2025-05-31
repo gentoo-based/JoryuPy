@@ -8,4 +8,4 @@ load_dotenv()
 
 TOKEN = getenv("DISCORD_TOKEN")
 
-JoryuPy(intents=Intents.all(), command_prefix=get_prefix).run(TOKEN)
+JoryuPy(intents=Intents.all(), command_prefix=get_prefix).run(token=TOKEN)
