@@ -3,7 +3,6 @@ import asyncio
 import random
 from time import time
 from discord import activity, Status, Message, Guild
-from discord.utils import MISSING, setup_logging
 from discord.ext import commands
 from database import execute_query
 
@@ -27,35 +26,6 @@ class JoryuPy(commands.AutoShardedBot):
         self.GITHUB_API_URL = (
             "https://api.github.com/repos/gentoo-based/memes/contents/memes"
         )
-
-    def run(
-        self,
-        token,
-        *,
-        reconnect=True,
-        log_handler=MISSING,
-        log_formatter=MISSING,
-        log_level=MISSING,
-        root_logger=False,
-    ):
-        """A runner for the bot"""
-
-        async def runner():
-            async with self:
-                await self.start(token=token, reconnect=reconnect)
-
-        if log_handler is None:
-            setup_logging(
-                handler=log_handler,
-                formatter=log_formatter,
-                level=log_level,
-                root=root_logger,
-            )
-
-        try:
-            asyncio.run(runner())
-        except KeyboardInterrupt:
-            return
 
     async def setup_hook(self):
         """A once-only event handler"""
