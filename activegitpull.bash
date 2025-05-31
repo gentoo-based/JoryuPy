@@ -1,5 +1,3 @@
-#!/bin/env bash
-
 [[ -x "/usr/bin/git" ]] && loop() || echo "Git not installed"
 
 loop() {
