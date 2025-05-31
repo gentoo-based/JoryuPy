@@ -49,7 +49,7 @@ class Owner(commands.Cog):
             await ctx.channel.typing()
         else:
             await ctx.defer(ephemeral=True)
-        await self.bot.load_extension(cog)
+        await self.bot.load_extension("plugins." + cog)
         if ctx.interaction is None:
             await ctx.author.send(f"Loaded cog: {cog} successfully.")
         else:
@@ -66,7 +66,7 @@ class Owner(commands.Cog):
             await ctx.channel.typing()
         else:
             await ctx.defer(ephemeral=True)
-        await self.bot.unload_extension(cog)
+        await self.bot.unload_extension("plugins." + cog)
         if ctx.interaction is None:
             await ctx.author.send(f"Unloaded cog: {cog} successfully.")
         else:
@@ -83,7 +83,7 @@ class Owner(commands.Cog):
             await ctx.channel.typing()
         else:
             await ctx.defer(ephemeral=True)
-        await self.bot.reload_extension(cog)
+        await self.bot.reload_extension("plugins." + cog)
         if ctx.interaction is None:
             await ctx.author.send(f"Reloaded cog: {cog} successfully.")
         else:
@@ -115,9 +115,9 @@ class Owner(commands.Cog):
             await ctx.channel.typing()
         else:
             await ctx.defer(ephemeral=True)
-        await self.bot.reload_extension("misc")
-        await self.bot.reload_extension("moderation")
-        await self.bot.reload_extension("owner")
+        await self.bot.load_extension("plugins.misc")
+        await self.bot.load_extension("plugins.moderation")
+        await self.bot.load_extension("plugins.owner")
         await self.bot.tree.sync()
         if ctx.interaction is None:
             await ctx.author.send(content="Successfully reinitialized the bot. Phew...")

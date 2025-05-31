@@ -71,9 +71,9 @@ class JoryuPy(commands.AutoShardedBot):
         )
 
         # Load the extensions/cogs.
-        await self.load_extension("cogs.misc")
-        await self.load_extension("cogs.moderation")
-        await self.load_extension("cogs.owner")
+        await self.load_extension("plugins.misc")
+        await self.load_extension("plugins.moderation")
+        await self.load_extension("plugins.owner")
 
         # Sync the command tree to keep all of the interaction commands up to date.
 
