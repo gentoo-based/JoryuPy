@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 
 from os import getenv
-from joryu import JoryuPy, get_prefix
-from dotenv import load_dotenv
+
 from discord import Intents
+from dotenv import load_dotenv
+
+from joryu import JoryuPy, get_prefix
 
 load_dotenv()
 

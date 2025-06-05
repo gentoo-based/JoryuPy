@@ -1,7 +1,11 @@
+from subprocess import TimeoutExpired, run
+from typing import Literal, Optional
+
+from discord import Attachment, File, app_commands
 from discord.ext import commands
-from discord import app_commands, File, Attachment
-from typing import Optional, Literal
+
 from joryu import JoryuPy
+
 
 class Owner(commands.Cog):
     def __init__(self, bot: JoryuPy) -> None:
@@ -71,6 +75,36 @@ class Owner(commands.Cog):
             await ctx.author.send(f"Unloaded cog: {cog} successfully.")
         else:
             await ctx.send(content=f"Unloaded cog: {cog} successfully.", ephemeral=True)
+
+    @commands.hybrid_command()
+    @commands.is_owner()
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+    @app_commands.allowed_installs(guilds=True, users=True)
+    @app_commands.describe(command="Command to run on the phone"):
+        """Run a command on the phone"""
+        try:
+       
+            result = run(command, shell=True, capture_output=True, text=True, timeout=10)
+        
+            # Prepare output message
+            output = result.stdout if result.stdout else "No output."
+            error = result.stderr if result.stderr else ""
+        
+            # Discord message limit is 2000 characters, truncate if needed
+            if len(output) > 1900:
+                output = output[:1900] + "\n...[output truncated]"
+            if len(error) > 1900:
+                error = error[:1900] + "\n...[error truncated]"
+        
+            response = f"**Output:**\n``````"
+            if error:
+                response += f"\n**Error:**\n``````"
+        
+            await ctx.send(response)
+        except TimeoutExpired:
+            await ctx.send("Command timed out.")
+        except Exception as e:
+            await ctx.send(f"An error occurred: {e}")
 
     @commands.hybrid_command()
     @commands.is_owner()
