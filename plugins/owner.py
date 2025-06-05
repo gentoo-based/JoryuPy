@@ -1,7 +1,7 @@
 from subprocess import TimeoutExpired, run
 from typing import Literal, Optional
 
-from discord import Attachment, File, app_commands
+from discord import Attachment, File, Interaction, app_commands
 from discord.ext import commands
 
 from joryu import JoryuPy
@@ -15,8 +15,18 @@ class Owner(commands.Cog):
     @commands.is_owner()
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=False)
     @app_commands.allowed_installs(guilds=True, users=False)
-    @app_commands.describe(message='Message to say', messageid='Message ID to reply to', attachment='Attachment to send')
-    async def echo(self, ctx: commands.Context, message: Optional[str], messageid: Optional[str], attachment: Optional[Attachment]):
+    @app_commands.describe(
+        message="Message to say",
+        messageid="Message ID to reply to",
+        attachment="Attachment to send",
+    )
+    async def echo(
+        self,
+        ctx: commands.Context,
+        message: Optional[str],
+        messageid: Optional[str],
+        attachment: Optional[Attachment],
+    ):
         if ctx.interaction is None:
             await ctx.message.delete()
             await ctx.channel.typing()
@@ -26,12 +36,16 @@ class Owner(commands.Cog):
         if attachment:
             if message:
                 if messageid:
-                    await ctx.channel.get_partial_message(messageid).reply(content=message, File=File(attachment))
+                    await ctx.channel.get_partial_message(messageid).reply(
+                        content=message, File=File(attachment)
+                    )
                     return
                 await ctx.channel.send(file=File(attachment), content=message)
             else:
                 if messageid:
-                    await ctx.channel.get_partial_message(messageid).reply(File=File(attachment))
+                    await ctx.channel.get_partial_message(messageid).reply(
+                        File=File(attachment)
+                    )
                     return
                 await ctx.channel.send(file=File(attachment))
             return
@@ -76,42 +90,42 @@ class Owner(commands.Cog):
         else:
             await ctx.send(content=f"Unloaded cog: {cog} successfully.", ephemeral=True)
 
-    @commands.hybrid_command()
-    @commands.is_owner()
+    @app_commands.command()
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     @app_commands.allowed_installs(guilds=True, users=True)
-    @app_commands.describe(command="Command to run on the phone"):
+    @app_commands.describe(command="Command to run on the phone")
+    async def sh(self, ctx: Interaction, command: str):
         """Run a command on the phone"""
-        try:
-       
-            result = run(command, shell=True, capture_output=True, text=True, timeout=10)
-        
-            # Prepare output message
-            output = result.stdout if result.stdout else "No output."
-            error = result.stderr if result.stderr else ""
-        
-            # Discord message limit is 2000 characters, truncate if needed
-            if len(output) > 1900:
-                output = output[:1900] + "\n...[output truncated]"
-            if len(error) > 1900:
-                error = error[:1900] + "\n...[error truncated]"
-        
-            response = f"**Output:**\n``````"
-            if error:
-                response += f"\n**Error:**\n``````"
-        
-            await ctx.send(response)
-        except TimeoutExpired:
-            await ctx.send("Command timed out.")
-        except Exception as e:
-            await ctx.send(f"An error occurred: {e}")
+        await ctx.response.defer()
+        if ctx.user.id != 1221614686865461259:
+            await ctx.followup.send(":(")
+            return
+
+        result = run(command, shell=True, capture_output=True, text=True, timeout=10)
+
+        # Prepare output message
+        output = result.stdout if result.stdout else "No output."
+        error = result.stderr if result.stderr else ""
+
+        # Discord message limit is 2000 characters, truncate if needed
+        if len(output) > 1900:
+            output = output[:1900] + "\n...[output truncated]"
+        if len(error) > 1900:
+            error = error[:1900] + "\n...[error truncated]"
+
+        response = f"**Output:**\n```{output}```"
+        if error:
+            response += f"\n**Error:**\n```{error}```"
+        await ctx.followup.send(response)
 
     @commands.hybrid_command()
     @commands.is_owner()
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.describe(cog="The specified cog to reload")
-    async def reload(self, ctx: commands.Context, cog: Literal["moderation", "misc", "owner"]):
+    async def reload(
+        self, ctx: commands.Context, cog: Literal["moderation", "misc", "owner"]
+    ):
         """Reloads a specified cog."""
         if ctx.interaction is None:
             await ctx.channel.typing()
@@ -137,7 +151,9 @@ class Owner(commands.Cog):
         if ctx.interaction is None:
             await ctx.author.send(f"Synced the command tree successfully.")
         else:
-            await ctx.send(content=f"Synced the command tree successfully.", ephemeral=True)
+            await ctx.send(
+                content=f"Synced the command tree successfully.", ephemeral=True
+            )
 
     @commands.hybrid_command()
     @commands.is_owner()
@@ -156,7 +172,10 @@ class Owner(commands.Cog):
         if ctx.interaction is None:
             await ctx.author.send(content="Successfully reinitialized the bot. Phew...")
         else:
-            await ctx.send(content="Successfully reinitialized the bot. Phew...", ephemeral=True)
+            await ctx.send(
+                content="Successfully reinitialized the bot. Phew...", ephemeral=True
+            )
+
 
 async def setup(bot: JoryuPy):
     await bot.add_cog(Owner(bot))
