@@ -111,13 +111,13 @@ class Owner(commands.Cog):
             return
         if len(error) > 1900:
             error = error.decode()[:1900] + "\n...[error truncated]"
-            response += f"\n**Error:**\n```{error}```"
+            response = f"\n**Error:**\n```{error}```"
             await ctx.followup.send(response)
             return
 
-        response = f"**Output:**\n```{output}```"
+        response = f"**Output:**\n```{output.decode()}```"
         if error:
-            response += f"\n**Error:**\n```{error}```"
+            response = f"\n**Error:**\n```{error.decode()}```"
         await ctx.followup.send(response)
 
     @commands.hybrid_command()
