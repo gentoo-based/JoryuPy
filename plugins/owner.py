@@ -1,4 +1,4 @@
-from subprocess import TimeoutExpired, run
+from asyncio import create_subprocess_shell, subprocess
 from typing import Literal, Optional
 
 from discord import Attachment, File, Interaction, app_commands
@@ -98,17 +98,22 @@ class Owner(commands.Cog):
         """Run a command on the phone"""
         await ctx.response.defer()
 
-        result = run(command, shell=True, capture_output=True, text=True, timeout=54000)
+        result = await create_subprocess_shell(cmd=command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         # Prepare output message
-        output = result.stdout if result.stdout else "No output."
-        error = result.stderr if result.stderr else ""
+        output, error = await result.communicate()
 
         # Discord message limit is 2000 characters, truncate if needed
         if len(output) > 1900:
-            output = output[:1900] + "\n...[output truncated]"
+            output = output.decode()[:1900] + "\n...[output truncated]"
+            response = f"**Output:**\n```{output}```"
+            await ctx.followup.send(response)
+            return
         if len(error) > 1900:
-            error = error[:1900] + "\n...[error truncated]"
+            error = error.decode()[:1900] + "\n...[error truncated]"
+            response += f"\n**Error:**\n```{error}```"
+            await ctx.followup.send(response)
+            return
 
         response = f"**Output:**\n```{output}```"
         if error:
