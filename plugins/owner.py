@@ -98,7 +98,7 @@ class Owner(commands.Cog):
         """Run a command on the phone"""
         await ctx.response.defer()
 
-        result = run(command, shell=True, capture_output=True, text=True, timeout=10)
+        result = run(command, shell=True, capture_output=True, text=True, timeout=54000)
 
         # Prepare output message
         output = result.stdout if result.stdout else "No output."
