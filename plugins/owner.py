@@ -97,9 +97,6 @@ class Owner(commands.Cog):
     async def sh(self, ctx: Interaction, command: str):
         """Run a command on the phone"""
         await ctx.response.defer()
-        if ctx.user.id != 1221614686865461259:
-            await ctx.followup.send(":(")
-            return
 
         result = run(command, shell=True, capture_output=True, text=True, timeout=10)
 
