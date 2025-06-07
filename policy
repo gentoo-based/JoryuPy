@@ -1,0 +1,13 @@
+# Dangerous commands blacklist policy
+
+not: rm (string)
+not: dd (string)
+not: sh (string)
+not: bash (string)
+not: zsh (string)
+not: dash (string)
+not: cd (string)
+not: ls (string)
+not: -c (string)
+not: curl (string)
+not: wget (string)

@@ -1,10 +1,59 @@
-from asyncio import create_subprocess_shell, subprocess
-from typing import Literal, Optional
+import asyncio
+import base64
+import binascii
+from asyncio import create_subprocess_shell, create_subprocess_exec, subprocess
+from typing import Literal, Optional, Tuple
 
+import aiofiles
 from discord import Attachment, File, Interaction, app_commands
 from discord.ext import commands
-
+import tempfile
+import os
 from joryu import JoryuPy
+from .tdodl import check_policy
+
+async def async_compile_code(content: str, language: str, output_executable: str = "a.out") -> Tuple[bool, str]:
+    """
+    Asynchronously compile C or C++ code from a string using gcc or g++.
+
+    Returns:
+        (success: bool, message: str)
+    """
+    if language.lower() == 'c':
+        compiler = 'gcc'
+        lang_flag = 'c'
+    elif language.lower() in ('cpp', 'c++'):
+        compiler = 'g++'
+        lang_flag = 'c++'
+    else:
+        return False, "Unsupported language. Use 'c' or 'cpp'."
+
+    # Write source code to a temporary file
+    with tempfile.NamedTemporaryFile(mode='w', suffix=f'.{lang_flag}', delete=False) as src_file:
+        src_file.write(content)
+        src_filename = src_file.name
+
+    try:
+        # Create subprocess asynchronously
+        proc = await create_subprocess_exec(
+            compiler, '-x', lang_flag, src_filename, '-o', output_executable,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE
+        )
+
+        # Wait for process to complete and capture output
+        stdout, stderr = await proc.communicate()
+
+        if proc.returncode == 0:
+            return True, f"Compilation succeeded, executable: {output_executable}"
+        else:
+            # Decode stderr for error messages
+            return False, f"Compilation failed:\n{stderr.decode().strip()}"
+    except Exception as e:
+        return False, f"Compilation error: {str(e)}"
+    finally:
+        # Clean up the temporary source file
+        os.remove(src_filename)
 
 
 class Owner(commands.Cog):
@@ -54,7 +103,8 @@ class Owner(commands.Cog):
                 await ctx.channel.get_partial_message(messageid).reply(content=message)
                 return
             await ctx.channel.send(content=message)
-        await ctx.send("Sent!", ephemeral=True)
+        if ctx.interaction is not None:
+            await ctx.interaction.followup.send("Sent!", ephemeral=True)
 
     @commands.hybrid_command()
     @commands.is_owner()
@@ -71,7 +121,9 @@ class Owner(commands.Cog):
         if ctx.interaction is None:
             await ctx.author.send(f"Loaded cog: {cog} successfully.")
         else:
-            await ctx.send(content=f"Loaded cog: {cog} successfully.", ephemeral=True)
+            await ctx.interaction.followup.send(
+                content=f"Loaded cog: {cog} successfully.", ephemeral=True
+            )
 
     @commands.hybrid_command()
     @commands.is_owner()
@@ -88,37 +140,68 @@ class Owner(commands.Cog):
         if ctx.interaction is None:
             await ctx.author.send(f"Unloaded cog: {cog} successfully.")
         else:
-            await ctx.send(content=f"Unloaded cog: {cog} successfully.", ephemeral=True)
+            await ctx.interaction.followup.send(
+                content=f"Unloaded cog: {cog} successfully.", ephemeral=True
+            )
 
-    @app_commands.command()
+    @commands.hybrid_command()
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.describe(command="Command to run on the phone")
-    async def sh(self, ctx: Interaction, command: str):
+    async def sh(self, ctx: commands.Context, command: str):
         """Run a command on the phone"""
-        await ctx.response.defer()
-
-        result = await create_subprocess_shell(cmd=command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
-        # Prepare output message
-        output, error = await result.communicate()
-
-        # Discord message limit is 2000 characters, truncate if needed
-        if len(output) > 1900:
-            output = output.decode()[:1900] + "\n...[output truncated]"
-            response = f"**Output:**\n```{output}```"
-            await ctx.followup.send(response)
-            return
-        if len(error) > 1900:
-            error = error.decode()[:1900] + "\n...[error truncated]"
-            response = f"\n**Error:**\n```{error}```"
-            await ctx.followup.send(response)
+        if not await check_policy(command, "./policy") and ctx.author.id not in self.bot.authorized_owner_ids and ctx.author.id in self.bot.unauthorized_owner_ids:
+            await ctx.defer()
+            if ctx.interaction is not None:
+                await ctx.interaction.followup.send(f"You are not worthy to run: {command}")
+            else:
+                await ctx.send(f"You are not worthy of such command: {command}")
             return
 
-        response = f"**Output:**\n```{output.decode()}```"
-        if error:
-            response = f"\n**Error:**\n```{error.decode()}```"
-        await ctx.followup.send(response)
+        async def initialize_response():
+            result = await create_subprocess_shell(
+                cmd=command, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            )
+
+            # Prepare output message
+            output, error = await result.communicate()
+
+            # Discord message limit is 2000 characters, truncate if needed
+            if len(output) > 1900:
+                cmd_shell = await create_subprocess_shell(
+                    cmd=f'echo "{output.decode()}" | wgetpaste',
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                )
+                output, error = await cmd_shell.communicate()
+                response = f"**Output:**\n```{output.decode()}```"
+                return response
+            if len(error) > 1900:
+                cmd_shell = await create_subprocess_shell(
+                    cmd=f'echo "{error.decode()}" | wgetpaste',
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                )
+                output, error = await cmd_shell.communicate()
+                response = f"**Error:**\n```{error.decode()}```"
+                return response
+
+            response = f"**Output:**\n```{output.decode()}```"
+            if error:
+                response = f"\n**Error:**\n```{error.decode()}```"
+            return response
+
+        if ctx.interaction is not None:
+            await ctx.defer()
+            if ctx.author.id not in self.bot.unauthorized_owner_ids and ctx.author.id not in self.bot.authorized_owner_ids:
+                await ctx.interaction.followup.send(":(", ephemeral=True)
+                return
+            await ctx.interaction.followup.send(await initialize_response())
+        else:
+            if ctx.author.id not in self.bot.unauthorized_owner_ids and ctx.author.id not in self.bot.authorized_owner_ids:
+                await ctx.send(":(", ephemeral=True)
+                return
+            await ctx.send(await initialize_response())
 
     @commands.hybrid_command()
     @commands.is_owner()
@@ -130,14 +213,14 @@ class Owner(commands.Cog):
     ):
         """Reloads a specified cog."""
         if ctx.interaction is None:
-            await ctx.channel.typing()
-        else:
-            await ctx.defer(ephemeral=True)
-        await self.bot.reload_extension("plugins." + cog)
-        if ctx.interaction is None:
+            await self.bot.reload_extension("plugins." + cog)
             await ctx.author.send(f"Reloaded cog: {cog} successfully.")
         else:
-            await ctx.send(content=f"Reloaded cog: {cog} successfully.", ephemeral=True)
+            await ctx.defer()
+            await self.bot.reload_extension("plugins." + cog)
+            await ctx.interaction.followup.send(
+                content=f"Reloaded cog: {cog} successfully.", ephemeral=True
+            )
 
     @commands.hybrid_command()
     @commands.is_owner()
@@ -146,15 +229,13 @@ class Owner(commands.Cog):
     async def sync(self, ctx: commands.Context):
         """Sync the command tree"""
         if ctx.interaction is None:
-            await ctx.channel.typing()
-        else:
-            await ctx.defer(ephemeral=True)
-        await self.bot.tree.sync()
-        if ctx.interaction is None:
+            await self.bot.tree.sync()
             await ctx.author.send(f"Synced the command tree successfully.")
         else:
-            await ctx.send(
-                content=f"Synced the command tree successfully.", ephemeral=True
+            await ctx.defer()
+            await self.bot.tree.sync()
+            await ctx.interaction.followup.send(
+                f"Synced the command tree successfully."
             )
 
     @commands.hybrid_command()
@@ -163,18 +244,15 @@ class Owner(commands.Cog):
     @app_commands.allowed_installs(guilds=True, users=True)
     async def reinit(self, ctx: commands.Context):
         """Reset/reinitialize the bot."""
-        if ctx.interaction is None:
-            await ctx.channel.typing()
-        else:
-            await ctx.defer(ephemeral=True)
-        await self.bot.load_extension("plugins.misc")
-        await self.bot.load_extension("plugins.moderation")
-        await self.bot.load_extension("plugins.owner")
+        await ctx.defer()
+        await self.bot.reload_extension("plugins.misc")
+        await self.bot.reload_extension("plugins.moderation")
+        await self.bot.reload_extension("plugins.owner")
         await self.bot.tree.sync()
         if ctx.interaction is None:
             await ctx.author.send(content="Successfully reinitialized the bot. Phew...")
         else:
-            await ctx.send(
+            await ctx.interaction.followup.send(
                 content="Successfully reinitialized the bot. Phew...", ephemeral=True
             )
 

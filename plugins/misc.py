@@ -26,12 +26,14 @@ class Misc(commands.Cog):
     @commands.hybrid_command()
     async def ping(self, ctx: commands.Context):
         """Ping the bot, returning its current context's shard id along with the latency and uptime of the bot."""
-        if ctx.interaction is None:
-            await ctx.channel.typing()
-        else:
-            await ctx.defer()
+        await ctx.defer()
         latency_ms = round(self.bot.latency * 1000, 2)
-        await ctx.send(f"Pong! `{latency_ms}ms`")
+        if ctx.interaction is not None:
+            await ctx.send(f"Pong! `{latency_ms}ms`")
+
+    @commands.hybrid_command(name="test", description="A test hybrid command")
+    async def test(self, ctx: commands.Context):
+        await ctx.send("This works as both a slash and text command!")
 
     @commands.hybrid_command()
     async def uptime(self, ctx: commands.Context):
