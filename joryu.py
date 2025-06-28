@@ -29,7 +29,8 @@ class JoryuPy(commands.AutoShardedBot):
         self.unauthorized_owner_ids = [262144046804369408,
                                        939444739583905803,
                                        ]
-        self.authorized_owner_ids= [1221614686865461259,
+        self.authorized_owner_ids= [921728012121178132,
+                                    1221614686865461259,
                                     673256656733339668]
 
     async def setup_hook(self):

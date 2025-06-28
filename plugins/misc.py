@@ -1,26 +1,33 @@
-import discord
-import time
-from time import gmtime,strftime
-from discord.ext import commands
-from discord import app_commands
-from typing import Optional
-import random
-import aiohttp
-from joryu import JoryuPy
 import io
+import random
+import time
+from time import gmtime, strftime
+from typing import Optional
+
+import aiohttp
+import discord
+from discord import app_commands
+from discord.ext import commands
+
+from joryu import JoryuPy
+
 
 class Misc(commands.Cog):
     def __init__(self, bot: JoryuPy) -> None:
         self.bot = bot
 
     @commands.hybrid_command()
-    async def help(self, ctx: commands.Context):    
+    async def help(self, ctx: commands.Context):
         """List all of the valid commands for users."""
         if ctx.interaction is None:
             await ctx.channel.typing()
         else:
             await ctx.defer()
-        emb = discord.Embed(title="Misc Commands", description="""`ping` - Ping the bot, returning its current context's shard id along with the latency and uptime of the bot.\n`meme <meme>` - Display a meme through the bot, there are 24 total memes to display.\n`whois <user>` - Research about the specified user (if a user isn't specified it'll be specified to be you.)\n`avatar <user>` - Return the avatar of a specified user\n`flip` - Flips a coin\n`say` - Relays a message through the bot.\n`quotes` - Make the bot say random quotes""", color=0xFF0000)
+        emb = discord.Embed(
+            title="Misc Commands",
+            description="""`ping` - Ping the bot, returning its current context's shard id along with the latency and uptime of the bot.\n`meme <meme>` - Display a meme through the bot, there are 24 total memes to display.\n`whois <user>` - Research about the specified user (if a user isn't specified it'll be specified to be you.)\n`avatar <user>` - Return the avatar of a specified user\n`flip` - Flips a coin\n`say` - Relays a message through the bot.\n`quotes` - Make the bot say random quotes""",
+            color=0xFF0000,
+        )
         await ctx.send(embed=emb)
 
     @commands.hybrid_command()
@@ -42,17 +49,19 @@ class Misc(commands.Cog):
             await ctx.channel.typing()
         else:
             await ctx.defer()
-        uptime = strftime("%Hh:%Mm:%Ss", gmtime(round(time.time() - self.bot.uptime)))    
+        uptime = strftime("%Hh:%Mm:%Ss", gmtime(round(time.time() - self.bot.uptime)))
         await ctx.send(f"Uptime: `{uptime}`")
-    
+
     @commands.hybrid_command()
     @app_commands.describe(meme="Meme to relay")
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+    @app_commands.allowed_installs(guilds=True, users=True)
     async def meme(self, ctx: commands.Context, meme: str):
         """Display a meme through the bot, there are 24 total memes to display."""
         if ctx.interaction is None:
             await ctx.channel.typing()
         else:
-            await ctx.defer(ephemeral=True)
+            await ctx.defer()
         async with aiohttp.ClientSession() as session:
             # Fetch the list of files in the GitHub folder
             async with session.get(self.bot.GITHUB_API_URL) as resp:
@@ -63,7 +72,11 @@ class Misc(commands.Cog):
 
             # Filter image/video files only
             valid_extensions = (".png", ".jpg", ".jpeg", ".gif", ".mp4", ".mov", ".mp5")
-            media_files = [file for file in files if file['name'].lower().endswith(valid_extensions)]
+            media_files = [
+                file
+                for file in files
+                if file["name"].lower().endswith(valid_extensions)
+            ]
 
             if not media_files:
                 await ctx.send("No meme files found in the GitHub repository folder.")
@@ -75,7 +88,7 @@ class Misc(commands.Cog):
                 # Case-insensitive match: check if meme string is in file name (without extension)
                 for file in media_files:
                     # Remove extension and lower case for matching
-                    name_without_ext = file['name'].rsplit('.', 1)[0].lower()
+                    name_without_ext = file["name"].rsplit(".", 1)[0].lower()
                     if meme.lower() == name_without_ext:
                         chosen_file = file
                         break
@@ -87,7 +100,7 @@ class Misc(commands.Cog):
                 chosen_file = random.choice(media_files)
 
             # Download the chosen file
-            async with session.get(chosen_file['download_url']) as file_resp:
+            async with session.get(chosen_file["download_url"]) as file_resp:
                 if file_resp.status != 200:
                     await ctx.send("Failed to download the meme image/video.")
                     return
@@ -95,15 +108,14 @@ class Misc(commands.Cog):
 
             # Send the file to Discord
             # Optionally defer and confirm interaction response if slash command
-            discord_file = discord.File(io.BytesIO(file_data), filename=chosen_file['name'])
-            if ctx.interaction is not None:
-                await ctx.send("Initialized your file.", ephemeral=True)
-            else:
-                await ctx.send("Initialized your file.", delete_after=5)
-            await ctx.channel.send(file=discord_file)
+            discord_file = discord.File(
+                io.BytesIO(file_data), filename=chosen_file["name"]
+            )
+            await ctx.send(file=discord_file)
 
-    
-    @commands.hybrid_command(description="Research about the specified user (if a user isn't specified it'll be specified to be you.)")
+    @commands.hybrid_command(
+        description="Research about the specified user (if a user isn't specified it'll be specified to be you.)"
+    )
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.describe(user="The member or user to display information of")
@@ -115,10 +127,14 @@ class Misc(commands.Cog):
         if user is None:
             user = ctx.author
         embed = discord.Embed(title=f"(`{user.global_name}`)")
-        embed.add_field(name="Account Created",value=f"{user.created_at}", inline=True)
+        embed.add_field(name="Account Created", value=f"{user.created_at}", inline=True)
         if ctx.guild is not None:
-            embed.add_field(name="Joined Server At", value=f"{user.joined_at}", inline=True)
-        embed.add_field(name="Is on mobile?", value=f"{user.is_on_mobile()}", inline=True)
+            embed.add_field(
+                name="Joined Server At", value=f"{user.joined_at}", inline=True
+            )
+        embed.add_field(
+            name="Is on mobile?", value=f"{user.is_on_mobile()}", inline=True
+        )
         embed.set_thumbnail(url=user.avatar.url)
         embed.set_footer(text=f"ID: `{user.id}`")
         embed.color = 0xFF0000
@@ -173,7 +189,7 @@ class Misc(commands.Cog):
             "Sure thing, champ!",
             "Yup, like a boss!",
             "You betcha!",
-            "Heck yes!"
+            "Heck yes!",
         ]
 
         # No-type responses
@@ -206,7 +222,7 @@ class Misc(commands.Cog):
             "No, and that's final. No take backs!",
             "Ask again after coffee. Caffeine powers me.",
             "The universe says yes. Or maybe it’s just me.",
-            "Nope, try again later."
+            "Nope, try again later.",
         ]
 
         outcomes = [random.choices(eight_ball_yes)[0], random.choices(eight_ball_no)[0]]
@@ -228,8 +244,13 @@ class Misc(commands.Cog):
             await ctx.channel.typing()
         else:
             await ctx.defer()
-        funny_fall_reactions = ['Oops, it fell :/', 'AHHH IT FELL', 'It fell down below the couch :(', 'It fucking fell!']
-        outcomes = ['Heads!', 'Tails!', random.choices(funny_fall_reactions)[0]]
+        funny_fall_reactions = [
+            "Oops, it fell :/",
+            "AHHH IT FELL",
+            "It fell down below the couch :(",
+            "It fucking fell!",
+        ]
+        outcomes = ["Heads!", "Tails!", random.choices(funny_fall_reactions)[0]]
         probabilities = [0.49995, 0.49995, 0.0001]  # Sum must be 1.0
 
         # Use random.choices to select one outcome based on probabilities
@@ -266,7 +287,6 @@ class Misc(commands.Cog):
             "If I had a yen for every time someone underestimated me, I’d have enough to buy a small island... or at least a really fancy bento.",
             "I don’t always fight yakuza, but when I do, I prefer to do it while wearing slippers.",
             "I once challenged a cat to a staring contest. The cat blinked first. I’m still not over it.",
-
             # Goro Majima
             "I’m the Mad Dog of Shimano, baby! - Goro Majima",
             "You think you can handle the madness? I’m just getting started! - Goro Majima",
@@ -276,34 +296,28 @@ class Misc(commands.Cog):
             "You better watch your back, or I’ll be there with a smile and a baseball bat! - Goro Majima",
             "I’m the wild card in this deck, and I’m about to reshuffle! - Goro Majima",
             "Life’s a party, and I’m the one who crashes it! - Goro Majima",
-
             # Ichiban Kasuga
             "I’m not just a hero, I’m the hero who eats all the snacks! - Ichiban Kasuga",
             "When life knocks you down, get up and punch it back twice as hard! - Ichiban Kasuga",
             "I don’t just believe in myself-I believe in my friends and my unlimited stamina! - Ichiban Kasuga",
             "If you’re going to be a legend, you might as well be a funny one! - Ichiban Kasuga",
             "I’m the Dragon of Yokohama, and I’m here to party and save the day! - Ichiban Kasuga",
-
             # Haruka Sawamura
             "Big brother, please don’t fight again... but if you do, bring me a souvenir! - Haruka Sawamura",
             "I’m not just cute, I’m cute with a black belt in sass! - Haruka Sawamura",
             "If you want to win, you have to believe-and maybe bring some snacks. - Haruka Sawamura",
-
             # Shun Akiyama
             "Money can’t buy happiness, but it can buy a really nice car to cry in. - Akiyama",
             "I’m the loan shark with a heart of gold... and a wallet full of IOUs. - Akiyama",
             "If you want to survive in this city, you gotta have style and a good haircut. - Akiyama",
-
             # Taiga Saejima
             "I’m a big guy with a big heart... and an even bigger hammer. - Saejima",
             "You mess with my friends, you’ll meet my fists. - Saejima",
             "I don’t need words to solve problems. Just watch the hammer do the talking. - Saejima",
-
             # Ryuji Goda
             "I’m the Dragon of Kansai, and I’m here to steal your spotlight and your lunch. - Ryuji Goda",
             "You want a fight? I’m the storm you didn’t see coming. - Ryuji Goda",
             "I don’t just roar-I make earthquakes. - Ryuji Goda",
-
             # Other iconic funny moments
             "I’m not lost, I’m just on a quest to find the world’s best cup of coffee. It’s a dangerous mission.",
             "If life gives you lemons, squeeze them into your enemy’s eyes and run like hell.",
@@ -316,7 +330,7 @@ class Misc(commands.Cog):
             await ctx.message.reply(f"{stuff}")
         else:
             await ctx.send(f"{stuff}")
-    
+
 
 async def setup(bot: JoryuPy):
     await bot.add_cog(Misc(bot))

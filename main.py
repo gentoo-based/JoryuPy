@@ -11,9 +11,11 @@ load_dotenv()
 
 TOKEN = getenv("DISCORD_TOKEN")
 
+
 async def main():
     async with JoryuPy(intents=Intents.all(), command_prefix=get_prefix) as bot:
         setup_logging()
         await bot.start(TOKEN)
+
 
 run(main=main())
