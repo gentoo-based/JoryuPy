@@ -7,6 +7,7 @@ from discord.ext import commands
 import mintegration
 from database import execute_query
 
+
 async def get_prefix(bot, message: Message):
     if message.guild:
         prefix = await execute_query(
@@ -26,12 +27,15 @@ class JoryuPy(commands.AutoShardedBot):
         self.GITHUB_API_URL = (
             "https://api.github.com/repos/gentoo-based/memes/contents/memes"
         )
-        self.unauthorized_owner_ids = [262144046804369408,
-                                       939444739583905803,
-                                       ]
-        self.authorized_owner_ids= [921728012121178132,
-                                    1221614686865461259,
-                                    673256656733339668]
+        self.unauthorized_owner_ids = [
+            262144046804369408,
+            939444739583905803,
+        ]
+        self.authorized_owner_ids = [
+            921728012121178132,
+            1221614686865461259,
+            673256656733339668,
+        ]
 
     async def setup_hook(self):
         """A once-only event handler"""
@@ -58,7 +62,13 @@ class JoryuPy(commands.AutoShardedBot):
         await self.tree.sync()
 
         # Return that the bot has loaded
-        print(f"{self.user.name}#{self.user.discriminator} has successfully entered the Discord API Gateway with {self.shard_count} Shards.")
+        print(
+            f"{self.user.name}#{
+                self.user.discriminator
+            } has successfully entered the Discord API Gateway with {
+                self.shard_count
+            } Shards."
+        )
 
     async def on_shard_ready(self, shard_id):
         while True:
