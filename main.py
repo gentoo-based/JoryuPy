@@ -17,5 +17,4 @@ async def main():
         setup_logging()
         await bot.start(TOKEN)
 
-
 run(main=main())
